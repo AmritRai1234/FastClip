@@ -1,0 +1,1 @@
+# FastClip data models (Pydantic)
