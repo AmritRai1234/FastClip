@@ -22,6 +22,7 @@ from pathlib import Path
 from openai import OpenAI
 
 from fast_clip.pipeline.transcriber import Segment, Transcript
+from fast_clip.utils.llm import load_api_key
 
 # ── Data models ─────────────────────────────────────────────────────────────────
 
@@ -116,27 +117,8 @@ MAX_TRANSCRIPT_CHARS = 240_000  # ~60K tokens, well within 1M context
 
 
 def _load_api_key() -> str:
-    """Return the OpenRouter API key from environment or config files."""
-    key = os.getenv("OPENROUTER_API_KEY", "").strip()
-    if key:
-        return key
-
-    # Try common env-file locations (used during dev, not by end users).
-    for candidate in (
-        Path.home() / ".fastclip" / ".env",
-        Path.home() / "fast-clip" / ".env",
-        Path.home() / ".hermes" / ".env",
-    ):
-        if candidate.exists():
-            text = candidate.read_text()
-            m = re.search(r"OPENROUTER_API_KEY[= ]*([^\n\r]+)", text)
-            if m:
-                return m.group(1).strip().strip("\"'")
-
-    raise RuntimeError(
-        "OPENROUTER_API_KEY not set. Set it in your environment or "
-        "~/.hermes/.env:  export OPENROUTER_API_KEY=sk-or-v1-..."
-    )
+    """Return the OpenRouter API key (delegates to the shared helper)."""
+    return load_api_key()
 
 
 def _build_prompt(transcript: Transcript, language: str | None = None) -> str:

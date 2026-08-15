@@ -23,21 +23,27 @@ OPENROUTER_BASE = "https://openrouter.ai/api/v1"
 
 
 def load_api_key() -> str:
-    """Return the OpenRouter API key from env or common env-file locations."""
+    """Return the OpenRouter API key from env or the project .env file.
+
+    Priority: process env var, then the project-local .env (cwd or package
+    root), then home-dir fallbacks (~/fast-clip/.env, ~/.hermes/.env).
+    """
     key = os.getenv("OPENROUTER_API_KEY", "").strip()
     if key:
         return key
+    _root = Path(__file__).resolve().parents[3]  # .../fast-clip (project root)
     for candidate in (
-        Path.home() / ".hermes" / ".env",
-        Path.home() / ".fastclip" / ".env",
+        Path.cwd() / ".env",
+        _root / ".env",
         Path.home() / "fast-clip" / ".env",
+        Path.home() / ".hermes" / ".env",
     ):
         if candidate.exists():
             m = re.search(r"OPENROUTER_API_KEY[= ]*([^\n\r]+)", candidate.read_text())
             if m:
                 return m.group(1).strip().strip("\"'")
     raise RuntimeError(
-        "OPENROUTER_API_KEY not set. Set it in your environment or ~/.hermes/.env"
+        "OPENROUTER_API_KEY not set. Add it to fast-clip/.env or set the env var."
     )
 
 
